@@ -1,0 +1,26 @@
+---
+apiVersion: apis.kcp.dev/v1alpha1
+kind: APIBinding
+metadata:
+  name: glbc
+spec:
+  permissionClaims:
+  - group: ""
+    resource: secrets
+    state: Accepted
+  - group: ""
+    identityHash: #### IDENTITY HASH ####
+    resource: services
+    state: Accepted
+  - group: apps
+    identityHash: #### IDENTITY HASH ####
+    resource: deployments
+    state: Accepted
+  - group: networking.k8s.io
+    identityHash: #### IDENTITY HASH ####
+    resource: ingresses
+    state: Accepted
+  reference:
+    workspace:
+      exportName: glbc-pipeline
+      path: root:redhat-hcg
