@@ -34,24 +34,28 @@ spec:
               if oc get secret -n tekton-results tekton-results-database 2>&1 >/dev/null; then exit; fi
               oc create secret generic tekton-results-database \
                 --namespace="tekton-results" \
-                --from-literal=DATABASE_USER=tekton \
-                --from-literal=DATABASE_PASSWORD=$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | base64)
+                --from-literal=DB_HOST=tekton-results-database-service.tekton-results.svc.cluster.local \
+                --from-literal=DB_USER=tekton \
+                --from-literal=DB_PASSWORD=$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | base64)
       containers:
         - env:
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  key: DATABASE_USER
+                  key: DB_USER
                   name: tekton-results-database
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: DATABASE_PASSWORD
+                  key: DB_PASSWORD
+                  name: tekton-results-database
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: DB_HOST
                   name: tekton-results-database
             - name: DB_PROTOCOL
               value: tcp
-            - name: DB_HOST
-              value: tekton-results-database-service.tekton-results.svc.cluster.local
             - name: DB_NAME
               value: tekton_results
           image: tekton-results-api
