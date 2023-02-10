@@ -33,7 +33,7 @@ init() {
   )
   export KUBECONFIG
   CASES="${CASES:-"chains,pipelines"}"
-  PIPELINES_NS="pipelines-test"
+  PIPELINES_NS="plnsvc-tests"
 }
 
 test_chains() {
@@ -168,13 +168,9 @@ test_results() {
   echo "[verify_results]"
   echo "Verify tekton-results has stored the results in the database"
 
-  # Prepare a custom Service Account that will be used for debugging purposes
-  if ! kubectl get serviceaccount tekton-results-debug -n tekton-results >/dev/null 2>&1; then
-    kubectl create serviceaccount tekton-results-debug -n tekton-results
-  fi
   # Grant required privileges to the Service Account
-  if ! kubectl get clusterrolebinding tekton-results-debug -n tekton-results >/dev/null 2>&1; then
-    kubectl create clusterrolebinding tekton-results-debug --clusterrole=tekton-results-readonly --serviceaccount=tekton-results:tekton-results-debug
+  if ! kubectl get rolebinding tekton-results-tests >/dev/null 2>&1; then
+    kubectl create rolebinding tekton-results-tests --clusterrole=tekton-results-readonly --serviceaccount=$PIPELINES_NS:default
   fi
 
   # Proxies the remote Service to localhost.
@@ -194,7 +190,7 @@ test_results() {
     "call"
     "--channel_creds_type=ssl"
     "--ssl_target=tekton-results-api-service.tekton-results.svc.cluster.local"
-    "--call_creds=access_token=$(kubectl get secrets -n tekton-results -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='tekton-results-debug')].data.token}"| cut -d ' ' -f 2 | base64 --decode)"
+    "--call_creds=access_token=$(kubectl get secrets -n $PIPELINES_NS -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='default')].data.token}"| cut -d ' ' -f 2 | base64 --decode)"
     "localhost:50051"
     "tekton.results.v1alpha2.Results.GetResult"
     "$QUERY")
